@@ -6,14 +6,14 @@ const rds = new aws.RDS();
 const DBInstanceIdentifier = process.env.AWS_DB_INSTANCE_IDENTIFIER;
 
 exports.handler = (event, context, callback) => {
-  getLogFiles().then(data => {
-    console.log(data[data.length-1]);
+  return downloadLogFile().then(data => {
+    console.log(data);
   });
   callback(null, 'success');
 }
 
 function getLogFiles() {
-  var params = {
+  const params = {
     DBInstanceIdentifier: DBInstanceIdentifier,
   };
 
@@ -22,6 +22,20 @@ function getLogFiles() {
     const obj = JSON.parse(JSON.stringify(data))['DescribeDBLogFiles']
     return obj.map((element, index, array) => {
       return element['LogFileName'];
+    });
+  });
+}
+
+function downloadLogFile() {
+  return getLogFiles().then(data => {
+    const params = {
+      DBInstanceIdentifier: DBInstanceIdentifier,
+      LogFileName: data[data.length-1],
+    };
+
+    const downloadLogFilePortionPromise = rds.downloadDBLogFilePortion(params).promise();
+    return downloadLogFilePortionPromise.then((data, err) => {
+      return JSON.parse(JSON.stringify(data))['LogFileData'];
     });
   });
 }
