@@ -4,8 +4,14 @@
   "description": "log deliveryman RDS for PostgreSQL to Elasticsearch Service",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build:babel": "babel ./src/ -d ./lib/",
+    "build:zip": "zip -r ./app.zip ./lib/ ./node_modules/",
+    "build": "npm run build:babel && npm run build:zip"
   },
   "author": "munisystem <munisystem@gmail.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "babel-cli": "^6.24.0",
+    "babel-preset-es2015": "^6.24.0"
+  }
 }
