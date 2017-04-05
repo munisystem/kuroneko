@@ -2,13 +2,14 @@
 
 const aws = require('aws-sdk');
 const rds = new aws.RDS();
-
 const DBInstanceIdentifier = process.env.AWS_DB_INSTANCE_IDENTIFIER;
 
+const plpr = require('plpr');
+
 exports.handler = (event, context, callback) => {
-  return downloadLogFile().then(data => {
-    console.log(data);
-  });
+  downloadLogFile().then(data => {
+    const logs = plpr(data);
+  })
   callback(null, 'success');
 }
 
