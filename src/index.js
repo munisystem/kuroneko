@@ -9,7 +9,7 @@ const plpr = require('plpr');
 exports.handler = (event, context, callback) => {
   downloadLogFile().then(data => {
     const logs = plpr(data);
-  })
+  });
   callback(null, 'success');
 }
 
