@@ -4,13 +4,30 @@ const aws = require('aws-sdk');
 const rds = new aws.RDS();
 const DBInstanceIdentifier = process.env.AWS_DB_INSTANCE_IDENTIFIER;
 
+const elasticsearch = require('elasticsearch');
+const client = new elasticsearch.Client({
+  host: 'localhost:9200',
+  log: 'trace'
+});
+
 const plpr = require('plpr');
 
 exports.handler = (event, context, callback) => {
   downloadLogFile().then(data => {
     const logs = plpr(data);
+    logs.forEach((element, index, array) => {
+      client.index({
+        index: 'rds_log',
+        type: DBInstanceIdentifier,
+        body: {
+          timestamp: Date.parse(element.timestamp),
+          duration: element.duration,
+          query: element.query
+        },
+      });
+    });
   });
-  callback(null, 'success');
+  return callback(null, 'success');
 }
 
 function getLogFiles() {

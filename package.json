@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "aws-sdk": "^2.37.0",
+    "elasticsearch": "^13.0.0-rc1",
     "plpr": "^1.0.0"
   }
 }
