@@ -3,11 +3,12 @@
 const aws = require('aws-sdk');
 const rds = new aws.RDS();
 const DBInstanceIdentifier = process.env.AWS_DB_INSTANCE_IDENTIFIER;
+const esHost = process.env.ES_HOST
 const esIndex = 'psql_query_log'
 
 const elasticsearch = require('elasticsearch');
 const client = new elasticsearch.Client({
-  host: 'localhost:9200'
+  host: esHost
 });
 
 const plpr = require('plpr');
