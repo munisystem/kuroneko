@@ -14,8 +14,7 @@ const client = new elasticsearch.Client({
 const plpr = require('plpr');
 
 exports.handler = (event, context, callback) => {
-  downloadLogFile().then((data, error) => {
-    if (error) return callback(null, error);
+  downloadLogFile().then(data => {
     const logs = plpr(data);
     console.log('Insert data length: ' + logs.length);
     var body = [];
@@ -31,6 +30,8 @@ exports.handler = (event, context, callback) => {
       if (error) return callback(error, 'error');
       else return callback(null, 'success');
     });
+  }).catch(error => {
+    return callback(error, 'error');
   });
 }
 
@@ -40,28 +41,31 @@ function getLogFiles() {
   };
 
   const describeDBLogFilesPromise = rds.describeDBLogFiles(params).promise();
-  return describeDBLogFilesPromise.then((data, error) => {
-    if (error) return null, error;
+  return describeDBLogFilesPromise.then(data  => {
     const obj = JSON.parse(JSON.stringify(data))['DescribeDBLogFiles']
     return obj.map((element, index, array) => {
       return element['LogFileName'];
     });
+  }).catch(error => {
+    throw error;
   });
 }
 
 function downloadLogFile() {
-  return getLogFiles().then((data,error) => {
-    if (error) return null, error;
+  return getLogFiles().then(data => {
     const params = {
       DBInstanceIdentifier: DBInstanceIdentifier,
       LogFileName: data[data.length-2],
     };
 
     const downloadLogFilePortionPromise = rds.downloadDBLogFilePortion(params).promise();
-    console.log('Downloading ' + DBInstanceIdentifier + ':' + data[data.length-2] +  '...')
-    return downloadLogFilePortionPromise.then((data, err) => {
-      if (error) return null, error;
+    console.log('Downloading ' + DBInstanceIdentifier + ':' + data[data.length-2] +  '...');
+    return downloadLogFilePortionPromise.then(data => {
       return JSON.parse(JSON.stringify(data))['LogFileData'];
+    }).catch(error => {
+      throw error;
     });
+  }).catch(error => {
+    throw error;
   });
 }
