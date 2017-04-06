@@ -20,13 +20,13 @@ exports.handler = (event, context, callback) => {
     const description = JSON.stringify({index: {_index: esIndex, _type: DBInstanceIdentifier}});
     logs.forEach((element, index, array) => {
       body.push(description);
-      body.push(JSON.stringify({timestamp: Date.parse(element.timestamp), duration: element.duration, query: element.query}));
+      body.push(JSON.stringify({timestamp: new Date(element.timestamp).toISOString(), duration: element.duration, query: element.query}));
     });
 
     client.bulk({
       body: body
     }, (error, response) => {
-      if (error) return callback(error, error);
+      if (error) return callback(error, 'error');
       else return callback(null, 'success');
     });
   });
@@ -50,7 +50,7 @@ function downloadLogFile() {
   return getLogFiles().then(data => {
     const params = {
       DBInstanceIdentifier: DBInstanceIdentifier,
-      LogFileName: data[data.length-1],
+      LogFileName: data[data.length-2],
     };
 
     const downloadLogFilePortionPromise = rds.downloadDBLogFilePortion(params).promise();
