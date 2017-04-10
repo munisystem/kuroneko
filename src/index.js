@@ -4,37 +4,21 @@ const aws = require('aws-sdk');
 const rds = new aws.RDS();
 const DBInstanceIdentifier = process.env.AWS_DB_INSTANCE_IDENTIFIER;
 
-const esHost = process.env.ES_HOST;
-const esIndex = 'psql_query_log';
-
-const elasticsearch = require('elasticsearch');
-const client = new elasticsearch.Client({
-  host: esHost
-});
-
 const plpr = require('plpr');
 const logLinePrefix = process.env.PSQL_LOG_LINE_PREFIX;
 
+const elasticsearch = require('./elasticsearch');
+
 exports.handler = (event, context, callback) => {
   downloadLogFile().then(data => {
-    if (typeof logLinePrefix === 'undefined') throw Error.new('You have to set PostgreSQL log_line_prefix in PSQL_LOG_LINE_PREFIX');
+    if (typeof logLinePrefix === 'undefined') throw new Error('You have to set PostgreSQL log_line_prefix in PSQL_LOG_LINE_PREFIX');
 
     const logs = plpr(data, logLinePrefix);
     console.log('Insert data length: ' + logs.length);
 
-    var body = [];
-    const description = JSON.stringify({index: {_index: esIndex, _type: DBInstanceIdentifier}});
-    logs.forEach((element, index, array) => {
-      body.push(description);
-      body.push(JSON.stringify(element));
-    });
-
-    client.bulk({
-      body: body
-    }, (error, response) => {
-      if (error) return callback(error, 'error');
-      else return callback(null, 'success');
-    });
+    const err = elasticsearch(logs, DBInstanceIdentifier);
+    if (err) return callback(err, 'error');
+    else return callback(null, 'success');
   }).catch(error => {
     return callback(error, 'error');
   });
