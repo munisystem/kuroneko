@@ -4,6 +4,7 @@ const moment = require('moment');
 const fs = require('fs');
 var config = null;
 var client = null;
+var schema = null;
 
 module.exports = (data, DBInstanceIdentifier) => {
   try {
@@ -12,6 +13,14 @@ module.exports = (data, DBInstanceIdentifier) => {
   catch(error) {
     return Promise.reject(error);
   };
+
+  const type = require('./type')
+  var types = type(data[0]);
+  var contain = [];
+  Object.keys(types).forEach((value, index, arr) => {
+    contain.push(value+':'+types[value]);
+  })
+  schema = contain.join(",");
 
   const bq = require('@google-cloud/bigquery');
   client = bq({
@@ -57,7 +66,7 @@ function table() {
     return dataset.table(config.table).exists().then(res => {
       if (!res[0]) {
         const options = {
-          schema: "starttime:timestamp,endtime:timestamp,hostport:string,user:string,dbname:string,pid:integer,duration:float,query:string"
+          schema: schema
         };
 
         return dataset.createTable(config.table, options).then(res => { return res[0] }).catch(error => {
