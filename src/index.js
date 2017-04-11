@@ -8,6 +8,7 @@ const plpr = require('plpr');
 const logLinePrefix = process.env.PSQL_LOG_LINE_PREFIX;
 
 const elasticsearch = require('./elasticsearch');
+const bq = require('./bq')
 
 exports.handler = (event, context, callback) => {
   downloadLogFile().then(data => {
@@ -16,9 +17,14 @@ exports.handler = (event, context, callback) => {
     const logs = plpr(data, logLinePrefix);
     console.log('Insert data length: ' + logs.length);
 
-    const err = elasticsearch(logs, DBInstanceIdentifier);
-    if (err) return callback(err, 'error');
-    else return callback(null, 'success');
+    // const err = elasticsearch(logs, DBInstanceIdentifier);
+    // if (err) return callback(err, 'error');
+    // else return callback(null, 'success');
+    bq(logs, DBInstanceIdentifier).then(() => {
+      return callback(null, 'success');
+    }).catch(error => {
+      return callback(error, 'error');
+    });
   }).catch(error => {
     return callback(error, 'error');
   });
