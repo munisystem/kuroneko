@@ -10,7 +10,7 @@ module.exports = (data, DBInstanceIdentifier) => {
     init(DBInstanceIdentifier);
   }
   catch(error) {
-    return error;
+    return Promise.reject(error);
   };
 
   const bq = require('@google-cloud/bigquery');

@@ -34,12 +34,13 @@ function getLogFiles() {
   const params = {
     DBInstanceIdentifier: DBInstanceIdentifier,
   };
+  if (typeof DBInstanceIdentifier === 'undefined') return Promise.reject(new Error('You have to export AWS RDS DB instance name to "AWS_DB_INSTANCE_IDENTIFIER"'));
 
   const describeDBLogFilesPromise = rds.describeDBLogFiles(params).promise();
   return describeDBLogFilesPromise.then(data  => {
-    const obj = JSON.parse(JSON.stringify(data))['DescribeDBLogFiles']
-    return obj.map((element, index, array) => {
-      return element['LogFileName'];
+    const obj = JSON.parse(JSON.stringify(data))['DescribeDBLogFiles'];
+    return obj.map((value, index, array) => {
+      return value['LogFileName'];
     });
   }).catch(error => {
     throw error;
@@ -47,14 +48,14 @@ function getLogFiles() {
 }
 
 function downloadLogFile() {
-  return getLogFiles().then(data => {
+  return getLogFiles().then(files => {
     const params = {
       DBInstanceIdentifier: DBInstanceIdentifier,
-      LogFileName: data[data.length-2],
+      LogFileName: files[files.length-2],
     };
 
     const downloadLogFilePortionPromise = rds.downloadDBLogFilePortion(params).promise();
-    console.log('Downloading ' + DBInstanceIdentifier + ':' + data[data.length-2] +  '...');
+    console.log('Downloading ' + DBInstanceIdentifier + ':' + files[files.length-2] +  '...');
     return downloadLogFilePortionPromise.then(data => {
       return JSON.parse(JSON.stringify(data))['LogFileData'];
     }).catch(error => {

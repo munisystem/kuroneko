@@ -7,7 +7,7 @@ module.exports = (data, DBInstanceIdentifier) => {
     init(DBInstanceIdentifier);
   }
   catch(error) {
-    return error;
+    return Promise.reject(error);
   };
 
   const es = require('elasticsearch');
@@ -18,8 +18,7 @@ module.exports = (data, DBInstanceIdentifier) => {
   client.bulk({
     body: body(data)
   }, (error, responce) => {
-    if (error) return error;
-    else return null;
+    if (error) return Promise(error);
   });
 }
 
