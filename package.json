@@ -7,7 +7,7 @@
     "watch": "babel ./src/ --watch -d ./lib/ --source-maps inline",
     "local-run": "node lambdaDriver.js",
     "build:babel": "babel ./src/ -d ./lib/",
-    "build:zip": "zip -r ./app.zip ./lib/ ./node_modules/",
+    "build:zip": "zip -r ./app.zip ./lib/ ./node_modules/ ./secret.json",
     "build": "npm run build:babel && npm run build:zip"
   },
   "author": "munisystem <munisystem@gmail.com>",
