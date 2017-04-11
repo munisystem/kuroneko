@@ -33,7 +33,13 @@ module.exports = (data, DBInstanceIdentifier) => {
   });
 }
 
-function init(tableBase) {
+function init(DBInstanceIdentifier) {
+  var tableBase = process.env.BQ_TABLE_BASE_NAME
+  if (typeof tableBase === 'undefined') {
+    console.log('Not export table base name to "BQ_TABLE_BASE_NAME", use "AWS_DB_INSTANCE_IDENTIFIER": ' + DBInstanceIdentifier);
+    tableBase = userDefTableBase;
+  }
+
   config = {
     projectId: process.env.BQ_PROJECT_ID,
     dataset: process.env.BQ_DATASET_NAME,
