@@ -82,7 +82,7 @@ function table() {
 
 function insert(data) {
   return table().then(table => {
-    while(data.length === 0) {
+    while(data.length > 0) {
       table.insert(data.slice(0, 300)).then(() => {}).catch(error => {
         throw error;
       });
