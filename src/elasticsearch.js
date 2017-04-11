@@ -1,6 +1,7 @@
 'use struct';
 
 var config = null;
+var client = null;
 
 module.exports = (data, DBInstanceIdentifier) => {
   try {
@@ -11,14 +12,14 @@ module.exports = (data, DBInstanceIdentifier) => {
   };
 
   const es = require('elasticsearch');
-  const client = new es.Client({
+  client = new es.Client({
     host: config.host
   });
 
-  client.bulk({
-    body: body(data)
-  }, (error, responce) => {
-    if (error) return Promise(error);
+  return new Promise((resolve, reject) => {
+    const error = insert(data);
+    if (error) reject(error);
+    else resolve();
   });
 }
 
@@ -42,4 +43,12 @@ function body(data) {
   });
 
   return store;
+}
+
+function insert(data) {
+  client.bulk({
+    body: body(data)
+  }, (error, responce) => {
+    if (error) return error;
+  });
 }
