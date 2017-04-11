@@ -7,6 +7,8 @@ const DBInstanceIdentifier = process.env.AWS_DB_INSTANCE_IDENTIFIER;
 const plpr = require('plpr');
 const logLinePrefix = process.env.PSQL_LOG_LINE_PREFIX;
 
+const backend = process.env.BACKEND_SERVICE;
+
 const elasticsearch = require('./elasticsearch');
 const bq = require('./bq')
 
@@ -17,10 +19,20 @@ exports.handler = (event, context, callback) => {
     const logs = plpr(data, logLinePrefix);
     console.log('Insert data length: ' + logs.length);
 
-    // const err = elasticsearch(logs, DBInstanceIdentifier);
-    // if (err) return callback(err, 'error');
-    // else return callback(null, 'success');
-    bq(logs, DBInstanceIdentifier).then(() => {
+    var inserter = null;
+    switch (backend) {
+      case 'es':
+        inserter = require('./elasticsearch');
+        break;
+      case 'bq':
+        inserter = require('./bq');
+        break;
+      default:
+        throw new Error('You have to export Backend Service "es" (Elasticsearch) or "bq" (BigQuery) to "BACKEND_SERVICE"');
+        break;
+    }
+
+    inserter(logs, DBInstanceIdentifier).then(() => {
       return callback(null, 'success');
     }).catch(error => {
       return callback(error, 'error');
