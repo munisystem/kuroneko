@@ -37,7 +37,7 @@ function init(tableBase) {
   config = {
     projectId: process.env.BQ_PROJECT_ID,
     dataset: process.env.BQ_DATASET_NAME,
-    table: tableBase.replace(/-/g, "_") + moment().add(-1, 'h').format('YYYYMMDD'),
+    table: tableBase.replace(/-/g, "_")+ "_query_log" + moment().add(-1, 'h').format('YYYYMMDD'),
     keyFilename: './secret.json'
   }
 
@@ -82,9 +82,12 @@ function table() {
 
 function insert(data) {
   return table().then(table => {
-    table.insert(data).then(() => {}).catch(error => {
-      throw error;
-    });
+    while(data.length === 0) {
+      table.insert(data.slice(0, 300)).then(() => {}).catch(error => {
+        throw error;
+      });
+      data = data.slice(300, data.length);
+    }
   }).catch(error => {
     throw error;
   });
