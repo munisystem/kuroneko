@@ -1,4 +1,4 @@
-'use struct';
+'use strict';
 
 const intParams = ['pid']
 const floatParams = ['duration']

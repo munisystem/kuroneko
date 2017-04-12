@@ -1,4 +1,4 @@
-'use struct';
+'use strict';
 
 var config = null;
 var client = null;
