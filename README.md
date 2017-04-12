@@ -5,6 +5,7 @@ kuroneko is AWS RDS for PostgreSQL query log deliveryman to datastores using AWS
 PostgreSQL don't supported slow query checker (like MySQL slow_query_log). In addition, that result is temporarily. Therefore, it is insufficent when inspect web application performance...
 
 Elasticsearch is very easy to monitor log visibility environment to use Kibana and data store services (e.g. BigQuery, Treasure Data, and more) provide powerful analystic platform.
+
 So sending RDS for PostgreSQL query log to that is best solution to "Site Reliability Engineering" !!
 
 ## Support Backend Service
@@ -15,7 +16,7 @@ kuroneko supporting data store service is below.
 |Elasticsearch|es|
 |BigQuery|bq|
 
-If you use Elasticsearch in log store backend, then export "BACKEND_SERVICE=es".
+If you use Elasticsearch in log store backend, then export `BACKEND_SERVICE=es`.
 
 ## Install
 
@@ -29,7 +30,7 @@ $ npm run build //=> create app.zip
 Go to AWS Lambda console and create new lambda function using this compressed file.
 You don't forget to change Hander `index.handler` to `lib/index.handler`.
 
-When use BigQuery in log store backend, you must include GCP Credential before build.
+*When use BigQuery in log store backend* , you must include GCP Credential before build.
 Access `GCP console > API Manager > Credentials > Create Service account key (type JSON)` and put credential json file in this project root renaming `secret.json`
 
 ```sh
