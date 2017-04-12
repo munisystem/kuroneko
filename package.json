@@ -13,14 +13,14 @@
   "author": "munisystem <munisystem@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "babel-cli": "^6.24.0",
-    "babel-preset-es2015": "^6.24.0"
+    "babel-cli": "^6.24.1",
+    "babel-preset-es2015": "^6.24.1"
   },
   "dependencies": {
-    "@google-cloud/bigquery": "^0.9.0",
-    "aws-sdk": "^2.39.0",
+    "@google-cloud/bigquery": "^0.9.1",
+    "aws-sdk": "^2.41.0",
     "elasticsearch": "^13.0.0-rc2",
     "moment": "^2.18.1",
-    "plpr": "^1.0.7"
+    "plpr": "^1.0.9"
   }
 }
