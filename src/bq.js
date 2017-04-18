@@ -28,7 +28,14 @@ module.exports = (data, DBInstanceIdentifier) => {
     keyFilename: config.keyFilename
   });
 
-  return insert(data).then().catch(error => {
+  var json = '';
+  data.forEach(obj => {
+    json = json + JSON.stringify(obj) + '\n';
+  });
+  const path = '/tmp/' + config.table + '.json';
+  fs.writeFileSync(path, json, 'utf-8');
+
+  return insert(path).then().catch(error => {
     throw error;
   });
 }
@@ -86,14 +93,11 @@ function table() {
   });
 }
 
-function insert(data) {
+function insert(path) {
   return table().then(table => {
-    while(data.length > 0) {
-      table.insert(data.slice(0, 300)).then(() => {}).catch(error => {
-        throw error;
-      });
-      data = data.slice(300, data.length);
-    }
+    table.import(path).then(() => {}).catch(error => {
+      throw error;
+    });
   }).catch(error => {
     throw error;
   });
