@@ -42,38 +42,36 @@ exports.handler = (event, context, callback) => {
   });
 }
 
-function getLogFiles() {
-  const params = {
+async function downloadLogFile() {
+  let params = {
     DBInstanceIdentifier: DBInstanceIdentifier,
   };
-  if (typeof DBInstanceIdentifier === 'undefined') return Promise.reject(new Error('You have to export AWS RDS DB instance name to "AWS_DB_INSTANCE_IDENTIFIER"'));
+  if (typeof DBInstanceIdentifier === 'undefined') throw new Error('You have to export AWS RDS DB instance name to "AWS_DB_INSTANCE_IDENTIFIER"');
 
-  const describeDBLogFilesPromise = rds.describeDBLogFiles(params).promise();
-  return describeDBLogFilesPromise.then(data  => {
-    const obj = JSON.parse(JSON.stringify(data))['DescribeDBLogFiles'];
-    return obj.map((value, index, array) => {
+  try {
+    const describeDBLogFilesPromise = rds.describeDBLogFiles(params).promise();
+    const data = await describeDBLogFilesPromise;
+    let obj = JSON.parse(JSON.stringify(data))['DescribeDBLogFiles'];
+    const files = obj.map((value, index, array) => {
       return value['LogFileName'];
     });
-  }).catch(error => {
-    throw error;
-  });
-}
 
-function downloadLogFile() {
-  return getLogFiles().then(files => {
-    const params = {
-      DBInstanceIdentifier: DBInstanceIdentifier,
-      LogFileName: files[files.length-2],
-    };
+    params['LogFileName'] = files[files.length-2];
+    let next = true;
+    let marker = '0';
+    let raw = '';
+    while(next) {
+      params['Marker'] = marker;
+      const downloadLogFilePortionPromise = rds.downloadDBLogFilePortion(params).promise();
+      const resp = await downloadLogFilePortionPromise;
 
-    const downloadLogFilePortionPromise = rds.downloadDBLogFilePortion(params).promise();
-    console.log('Downloading ' + DBInstanceIdentifier + ':' + files[files.length-2] +  '...');
-    return downloadLogFilePortionPromise.then(data => {
-      return JSON.parse(JSON.stringify(data))['LogFileData'];
-    }).catch(error => {
-      throw error;
-    });
-  }).catch(error => {
+      obj = JSON.parse(JSON.stringify(resp))
+      next = obj['AdditionalDataPending'];
+      marker = obj['Marker'];
+      raw = raw + obj['LogFileData'];
+    }
+    return raw;
+  } catch(error) {
     throw error;
-  });
+  }
 }
