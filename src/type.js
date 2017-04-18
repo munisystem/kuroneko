@@ -2,7 +2,7 @@
 
 const intParams = ['pid']
 const floatParams = ['duration']
-const timestampParams = ['starttime', 'endtime']
+const timestampParams = ['time']
 
 module.exports = (data) => {
   var types = {};
