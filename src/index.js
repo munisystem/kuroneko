@@ -57,6 +57,7 @@ async function downloadLogFile() {
     });
 
     params['LogFileName'] = files[files.length-2];
+    console.log('Downloading: ' + params['LogFileName'] + '...');
     let next = true;
     let marker = '0';
     let raw = '';

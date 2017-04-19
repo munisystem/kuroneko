@@ -2,52 +2,52 @@
 
 const moment = require('moment');
 const fs = require('fs');
-var config = null;
-var client = null;
-var schema = null;
 
 module.exports = (data, DBInstanceIdentifier) => {
+  let config = null;
   try {
-    init(DBInstanceIdentifier);
+    config = init(DBInstanceIdentifier);
   }
   catch(error) {
     return Promise.reject(error);
   };
 
   const type = require('./type')
-  var types = type(data[0]);
-  var contain = [];
+  let types = type(data[0]);
+  let contain = [];
   Object.keys(types).forEach((value, index, arr) => {
     contain.push(value+':'+types[value]);
   })
-  schema = contain.join(",");
+  let schema = contain.join(",");
 
   const bq = require('@google-cloud/bigquery');
-  client = bq({
+  let client = bq({
     projectId: config.projectId,
     keyFilename: config.keyFilename
   });
 
-  var json = '';
+  let json = '';
   data.forEach(obj => {
     json = json + JSON.stringify(obj) + '\n';
   });
   const path = '/tmp/' + config.table + '.json';
   fs.writeFileSync(path, json, 'utf-8');
 
-  return insert(path).then().catch(error => {
+  return insert(client, config, schema, path).then(() => {
+    fs.unlinkSync(path);
+  }).catch(error => {
     throw error;
   });
 }
 
 function init(DBInstanceIdentifier) {
-  var tableBase = process.env.BQ_TABLE_BASE_NAME
+  let tableBase = process.env.BQ_TABLE_BASE_NAME
   if (typeof tableBase === 'undefined') {
     console.log('Not export table base name to "BQ_TABLE_BASE_NAME", use "AWS_DB_INSTANCE_IDENTIFIER": ' + DBInstanceIdentifier);
     tableBase = DBInstanceIdentifier;
   }
 
-  config = {
+  const config = {
     projectId: process.env.BQ_PROJECT_ID,
     dataset: process.env.BQ_DATASET_NAME,
     table: tableBase.replace(/-/g, "_")+ "_query_log" + moment().add(-1, 'h').format('YYYYMMDD'),
@@ -61,7 +61,7 @@ function init(DBInstanceIdentifier) {
   return config;
 }
 
-function dataset() {
+function dataset(client, config) {
   return client.dataset(config.dataset).exists().then(res => {
     if (!res[0]) {
       return client.createDataset(config.dataset).then(res => { return res[0] }).catch(error => {
@@ -74,8 +74,8 @@ function dataset() {
   });
 }
 
-function table() {
-  return dataset().then(dataset => {
+function table(client, config, schema) {
+  return dataset(client, config).then(dataset => {
     return dataset.table(config.table).exists().then(res => {
       if (!res[0]) {
         const options = {
@@ -93,8 +93,8 @@ function table() {
   });
 }
 
-function insert(path) {
-  return table().then(table => {
+function insert(client, config, schema, path) {
+  return table(client, config, schema).then(table => {
     table.import(path).then(() => {}).catch(error => {
       throw error;
     });
