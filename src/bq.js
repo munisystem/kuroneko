@@ -33,7 +33,9 @@ module.exports = (data, DBInstanceIdentifier) => {
   const path = '/tmp/' + config.table + '.json';
   fs.writeFileSync(path, json, 'utf-8');
 
-  return insert(client, config, schema, path).then().catch(error => {
+  return insert(client, config, schema, path).then(() => {
+    fs.unlinkSync(path);
+  }).catch(error => {
     throw error;
   });
 }
