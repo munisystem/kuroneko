@@ -21,11 +21,11 @@
   },
   "dependencies": {
     "@google-cloud/bigquery": "^0.9.3",
-    "aws-sdk": "^2.41.0",
+    "aws-sdk": "^2.42.0",
     "babel-polyfill": "^6.23.0",
     "babel-runtime": "^6.23.0",
     "elasticsearch": "^13.0.0-rc2",
     "moment": "^2.18.1",
-    "plpr": "^1.0.11"
+    "plpr": "^1.0.12"
   }
 }
