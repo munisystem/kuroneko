@@ -42,15 +42,19 @@ module.exports = (data, DBInstanceIdentifier) => {
 
 function init(DBInstanceIdentifier) {
   let tableBase = process.env.BQ_TABLE_BASE_NAME
-  if (typeof tableBase === 'undefined') {
-    console.log('Not export table base name to "BQ_TABLE_BASE_NAME", use "AWS_DB_INSTANCE_IDENTIFIER": ' + DBInstanceIdentifier);
-    tableBase = DBInstanceIdentifier;
+  let table = process.env.BQ_TABLE_NAME;
+  if (typeof table === 'undefined') {
+    if (typeof tableBase === 'undefined') {
+      console.log('Not export table base name to "BQ_TABLE_BASE_NAME", use "AWS_DB_INSTANCE_IDENTIFIER": ' + DBInstanceIdentifier);
+      tableBase = DBInstanceIdentifier;
+    }
+    table = tableBase.replace(/-/g, "_")+ "_query_log" + moment().add(-1, 'h').format('YYYYMMDD');
   }
 
   const config = {
     projectId: process.env.BQ_PROJECT_ID,
     dataset: process.env.BQ_DATASET_NAME,
-    table: tableBase.replace(/-/g, "_")+ "_query_log" + moment().add(-1, 'h').format('YYYYMMDD'),
+    table: table,
     keyFilename: './secret.json'
   }
 
