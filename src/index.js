@@ -56,7 +56,12 @@ async function downloadLogFile() {
       return value['LogFileName'];
     });
 
-    params['LogFileName'] = files[files.length-2];
+    const filename = process.env.AWS_DB_LOGFILE_NAME;
+    params['LogFileName'] = filename;
+    if (typeof filename === 'undefined') {
+      params['LogFileName'] = files[files.length-2];
+    }
+
     console.log('Downloading: ' + params['LogFileName'] + '...');
     let next = true;
     let marker = '0';
