@@ -9,11 +9,13 @@ const logLinePrefix = process.env.PSQL_LOG_LINE_PREFIX;
 
 const backend = process.env.BACKEND_SERVICE;
 
+const fs = require('fs');
+
 const elasticsearch = require('./elasticsearch');
 const bq = require('./bq')
 
 exports.handler = (event, context, callback) => {
-  downloadLogFile().then(data => {
+  dataReceiver().then(data => {
     if (typeof logLinePrefix === 'undefined') throw new Error('You have to set PostgreSQL log_line_prefix in PSQL_LOG_LINE_PREFIX');
 
     const logs = plpr(data, logLinePrefix);
@@ -40,6 +42,15 @@ exports.handler = (event, context, callback) => {
   }).catch(error => {
     return callback(error, 'error');
   });
+}
+
+function dataReceiver() {
+  const filepath = process.env.LOCAL_LOGFILE_PATH;
+  if (typeof filepath === "undefined") {
+    return downloadLogFile();
+  }
+  const data = fs.readFileSync(filepath, 'utf-8');
+  return Promise.resolve(data);
 }
 
 async function downloadLogFile() {
