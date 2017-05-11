@@ -69,7 +69,6 @@ async function downloadLogFile() {
 
     const filename = process.env.AWS_DB_LOGFILE_NAME;
     params['LogFileName'] = filename;
-    params['NumberOfLines'] = 300
     if (typeof filename === 'undefined') {
       params['LogFileName'] = files[files.length-2];
     }
