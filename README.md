@@ -22,36 +22,52 @@ If you use Elasticsearch in log store backend, then export `BACKEND_SERVICE=es`.
 
 This project deploy to use .zip uploading.
 
-```
+**Elasticsearch**
+
+```sh
 $ npm install
-$ npm run build //=> create app.zip
+$ npm run build //=> using Linux
+$ npm run build:docker //=> using OSX
 ```
 
-Go to AWS Lambda console and create new lambda function using this compressed file.
-You don't forget to change Hander `index.handler` to `lib/index.handler`.
+**BigQuery**
 
-*When use BigQuery in log store backend* , you must include GCP Credential before build.
+You must include GCP Credential before build.
 Access `GCP console > API Manager > Credentials > Create Service account key (type JSON)` and put credential json file in this project root renaming `secret.json`
 
 ```sh
 ❯ ls -la
-total 111880
-drwxr-xr-x   16 muni  staff       544  4 12 11:20 .
-drwxr-xr-x   13 muni  staff       442  4  8 21:04 ..
--rw-r--r--    1 muni  staff        36  4  5 11:20 .babelrc
-drwxr-xr-x   15 muni  staff       510  4 12 15:10 .git
--rw-r--r--    1 muni  staff       931  4 11 11:40 .gitignore
--rw-r--r--    1 muni  staff      1050  4  4 14:45 LICENSE
--rw-r--r--    1 muni  staff      1767  4 12 15:23 README.md
--rw-r--r--    1 muni  staff  57242393  4 12 11:20 app.zip
-drwxr-xr-x    4 muni  staff       136  4  5 17:21 elasticsearch
--rw-r--r--    1 muni  staff       255  4 11 11:30 lambdaDriver.js
-drwxr-xr-x    6 muni  staff       204  4 11 16:50 lib
-drwxr-xr-x  116 muni  staff      3944  4 12 10:50 node_modules
--rw-r--r--    1 muni  staff       788  4 12 10:50 package.json
--rw-r--r--@   1 muni  staff      2337  4 11 11:10 secret.json
-drwxr-xr-x    6 muni  staff       204  4 11 16:40 src
+total 88
+drwxr-xr-x   18 muni  staff    612  5 15 18:50 .
+drwxr-xr-x   17 muni  staff    578  5 11 16:12 ..
+-rw-r--r--@   1 muni  staff   6148  5  2 17:37 .DS_Store
+-rw-r--r--    1 muni  staff     87  4 19 09:52 .babelrc
+drwxr-xr-x   15 muni  staff    510  5 15 18:51 .git
+-rw-r--r--    1 muni  staff    931  4 11 11:40 .gitignore
+-rw-r--r--    1 muni  staff    290  5 15 18:50 Dockerfile
+-rw-r--r--    1 muni  staff    309  5 15 18:50 Dockerfile_BQ
+-rw-r--r--    1 muni  staff   1050  4  4 14:45 LICENSE
+-rw-r--r--    1 muni  staff   3294  5 15 18:51 README.md
+drwxr-xr-x    4 muni  staff    136  5 15 18:22 dist
+drwxr-xr-x    4 muni  staff    136  4  5 17:21 elasticsearch
+-rw-r--r--    1 muni  staff    255  4 19 11:22 lambdaDriver.js
+drwxr-xr-x    6 muni  staff    204  4 11 16:50 lib
+drwxr-xr-x  298 muni  staff  10132  5 15 10:12 node_modules
+-rw-r--r--    1 muni  staff   1553  5 15 18:50 package.json
+-rw-r--r--@   1 muni  staff   2327  4 18 14:58 secret.json
+drwxr-xr-x    6 muni  staff    204  5 15 10:19 src
 ```
+
+```sh
+$ npm install
+$ npm run build:bq //=> using Linux
+$ npm run build:docker:bq //=> using OSX
+```
+
+Compressed file will be created in `dist/`.
+
+Go to AWS Lambda console and create new lambda function using this compressed file.
+You don't forget to change Hander `index.handler` to `lib/index.handler`.
 
 ## Environment Variable
 kuroneko use environment variable to configure.
