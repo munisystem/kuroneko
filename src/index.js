@@ -95,9 +95,7 @@ async function downloadLogFile() {
 function normalizeQueries(logs) {
   for (let i = 0, len = logs.length; i < len; i++) {
     const normalized = pgn(logs[i]['query']);
-    console.log(normalized)
     logs[i]['normalized_query'] = normalized;
-    console.log(logs[i])
   }
   return logs
 }
