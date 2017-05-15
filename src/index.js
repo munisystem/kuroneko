@@ -11,9 +11,6 @@ const backend = process.env.BACKEND_SERVICE;
 
 const fs = require('fs');
 
-const elasticsearch = require('./elasticsearch');
-const bq = require('./bq')
-
 exports.handler = (event, context, callback) => {
   dataReceiver().then(data => {
     if (typeof logLinePrefix === 'undefined') throw new Error('You have to set PostgreSQL log_line_prefix in PSQL_LOG_LINE_PREFIX');
