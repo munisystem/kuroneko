@@ -10,6 +10,7 @@ const logLinePrefix = process.env.PSQL_LOG_LINE_PREFIX;
 const backend = process.env.BACKEND_SERVICE;
 
 const fs = require('fs');
+const pgn = require('pg-query-normalizer');
 
 exports.handler = (event, context, callback) => {
   dataReceiver().then(data => {
@@ -31,7 +32,8 @@ exports.handler = (event, context, callback) => {
         break;
     }
 
-    inserter(logs, DBInstanceIdentifier).then(() => {
+    const normalized = normalizeQueries(logs);
+    inserter(normalized, DBInstanceIdentifier).then(() => {
       return callback(null, 'success');
     }).catch(error => {
       return callback(error, 'error');
@@ -88,4 +90,14 @@ async function downloadLogFile() {
   } catch(error) {
     throw error;
   }
+}
+
+function normalizeQueries(logs) {
+  for (let i = 0, len = logs.length; i < len; i++) {
+    const normalized = pgn(logs[i]['query']);
+    console.log(normalized)
+    logs[i]['normalized_query'] = normalized;
+    console.log(logs[i])
+  }
+  return logs
 }
