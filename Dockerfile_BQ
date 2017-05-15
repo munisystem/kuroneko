@@ -12,4 +12,5 @@ COPY package.json .
 RUN npm install
 
 COPY secret.json .
+COPY .babelrc .
 COPY src ./src

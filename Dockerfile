@@ -11,4 +11,5 @@ RUN mkdir lib
 COPY package.json .
 RUN npm install
 
+COPY .babelrc .
 COPY src ./src
