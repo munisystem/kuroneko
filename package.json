@@ -6,8 +6,14 @@
   "scripts": {
     "watch": "babel ./src/ --watch -d ./lib/ --source-maps inline",
     "local-run": "node lambdaDriver.js",
+    "docker": "docker build -t kuroneko-builder .",
+    "docker:bq": "docker build -t kuroneko-builder-bq -f Dockerfile_BQ .",
     "build:babel": "babel ./src/ -d ./lib/",
-    "build:zip": "zip -r ./app.zip ./lib/ ./node_modules/ ./secret.json",
+    "build:zip": "zip -r ./app.zip ./lib/ ./node_modules/ && mv app.zip dist",
+    "build:zip:bq": "zip -r ./app-bq.zip ./lib/ ./node_modules/ ./secret.json && mv app-bq.zip dist",
+    "build:docker": "npm run docker && docker run --rm -v `pwd`/dist:/usr/local/app/dist kuroneko-builder npm run build",
+    "build:docker:bq": "npm run docker:bq && docker run --rm -v `pwd`/dist:/usr/local/app/dist kuroneko-builder-bq npm run build:bq",
+    "build:bq": "npm run build:babel && npm run build:zip:bq",
     "build": "npm run build:babel && npm run build:zip"
   },
   "author": "munisystem <munisystem@gmail.com>",
