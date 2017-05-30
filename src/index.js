@@ -17,6 +17,10 @@ exports.handler = (event, context, callback) => {
     if (typeof logLinePrefix === 'undefined') throw new Error('You have to set PostgreSQL log_line_prefix in PSQL_LOG_LINE_PREFIX');
 
     const logs = plpr(data, logLinePrefix);
+    if (logs.length == 0) {
+      return  callback(null, 'success');
+    }
+
     console.log('Insert data length: ' + logs.length);
 
     var inserter = null;
