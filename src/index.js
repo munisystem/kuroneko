@@ -29,8 +29,8 @@ async function downloadLogFile() {
     if (typeof filename === 'undefined') {
       params.LogFileName = files[files.length - 2];
     }
+    console.log(`Downloading: ${params.LogFileName}...`); // eslint-disable-line no-console
 
-    console.log(`Downloading: ${params.LogFileName}...`);
     let next = true;
     let marker = '0';
     let raw = '';
@@ -77,8 +77,7 @@ exports.handler = (event, context, callback) => {
     if (logs.length === 0) {
       return callback(null, 'success');
     }
-
-    console.log(`Insert data length: ${logs.length}`);
+    console.log(`Insert data length: ${logs.length}`); // eslint-disable-line no-console
 
     let inserter = null;
     switch (backend) {
