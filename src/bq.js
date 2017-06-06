@@ -1,62 +1,26 @@
-'use strict';
-
 const moment = require('moment');
 const fs = require('fs');
+const bq = require('@google-cloud/bigquery');
 
-module.exports = (data, DBInstanceIdentifier) => {
-  let config = null;
-  try {
-    config = init(DBInstanceIdentifier);
-  }
-  catch(error) {
-    return Promise.reject(error);
-  };
-
-  const type = require('./type')
-  let types = type(data[0]);
-  let contain = [];
-  Object.keys(types).forEach((value, index, arr) => {
-    contain.push(value+':'+types[value]);
-  })
-  let schema = contain.join(",");
-
-  const bq = require('@google-cloud/bigquery');
-  let client = bq({
-    projectId: config.projectId,
-    keyFilename: config.keyFilename
-  });
-
-  let json = '';
-  data.forEach(obj => {
-    json = json + JSON.stringify(obj) + '\n';
-  });
-  const path = '/tmp/' + config.table + '.json';
-  fs.writeFileSync(path, json, 'utf-8');
-
-  return insert(client, config, schema, path).then(() => {
-    fs.unlinkSync(path);
-  }).catch(error => {
-    throw error;
-  });
-}
+const type = require('./type');
 
 function init(DBInstanceIdentifier) {
-  let tableBase = process.env.BQ_TABLE_BASE_NAME
-  let table = process.env.BQ_TABLE_NAME;
-  if (typeof table === 'undefined') {
+  let tableBase = process.env.BQ_TABLE_BASE_NAME;
+  let tableName = process.env.BQ_TABLE_NAME;
+  if (typeof tableName === 'undefined') {
     if (typeof tableBase === 'undefined') {
-      console.log('Not export table base name to "BQ_TABLE_BASE_NAME", use "AWS_DB_INSTANCE_IDENTIFIER": ' + DBInstanceIdentifier);
+      console.log(`Not export table base name to "BQ_TABLE_BASE_NAME", use "AWS_DB_INSTANCE_IDENTIFIER": ${DBInstanceIdentifier}`); // eslint-disable-line no-console
       tableBase = DBInstanceIdentifier;
     }
-    table = tableBase.replace(/-/g, "_")+ "_query_log" + moment().add(-1, 'h').format('YYYYMMDD');
+    tableName = `${tableBase.replace(/-/g, '_')}_query_log${moment().add(-1, 'h').format('YYYYMMDD')}`;
   }
 
   const config = {
     projectId: process.env.BQ_PROJECT_ID,
     dataset: process.env.BQ_DATASET_NAME,
-    table: table,
-    keyFilename: './secret.json'
-  }
+    table: tableName,
+    keyFilename: './secret.json',
+  };
 
   if (typeof config.projectId === 'undefined') throw new Error('You have to export BigQuery project ID to "BQ_PROJECT_ID"');
   if (typeof config.dataset === 'undefined') throw new Error('You have to export BigQuery dataset name to "BQ_DATASET_NAME"');
@@ -65,44 +29,78 @@ function init(DBInstanceIdentifier) {
   return config;
 }
 
-function dataset(client, config) {
-  return client.dataset(config.dataset).exists().then(res => {
-    if (!res[0]) {
-      return client.createDataset(config.dataset).then(res => { return res[0] }).catch(error => {
-        throw error;
+function getDataset(client, config) {
+  return client.dataset(config.dataset).exists().then((dataset) => {
+    if (!dataset[0]) {
+      return client.createDataset(config.dataset).then(res => res[0]).catch((err) => {
+        throw err;
       });
     }
     return client.dataset(config.dataset);
-  }).catch(error => {
-    throw error;
+  }).catch((err) => {
+    throw err;
   });
 }
 
-function table(client, config, schema) {
-  return dataset(client, config).then(dataset => {
-    return dataset.table(config.table).exists().then(res => {
-      if (!res[0]) {
+function getTable(client, config, schema) {
+  return getDataset(client, config).then((ds) => { // eslint-disable-line arrow-body-style
+    return ds.table(config.table).exists().then((dsRes) => {
+      if (!dsRes[0]) {
         const options = {
-          schema: schema
+          schema,
         };
 
-        return dataset.createTable(config.table, options).then(res => { return res[0] }).catch(error => {
-          throw error;
+        return ds.createTable(config.table, options).then(res => res[0]).catch((err) => { // eslint-disable-line max-len
+          throw err;
         });
       }
-      return dataset.table(config.table);
+      return ds.table(config.table);
     });
-  }).catch(error => {
-    throw error;
+  }).catch((err) => {
+    throw err;
   });
 }
 
 function insert(client, config, schema, path) {
-  return table(client, config, schema).then(table => {
-    table.import(path).then(() => {}).catch(error => {
-      throw error;
+  return getTable(client, config, schema).then((table) => {
+    table.import(path).then(() => {}).catch((err) => {
+      throw err;
     });
-  }).catch(error => {
-    throw error;
+  }).catch((err) => {
+    throw err;
   });
 }
+
+module.exports = (data, DBInstanceIdentifier) => {
+  let config = null;
+  try {
+    config = init(DBInstanceIdentifier);
+  } catch (err) {
+    return Promise.reject(err);
+  }
+
+  const types = type(data[0]);
+  const contain = [];
+  Object.keys(types).forEach((value) => {
+    contain.push(`${value}:${types[value]}`);
+  });
+  const schema = contain.join(',');
+
+  const client = bq({
+    projectId: config.projectId,
+    keyFilename: config.keyFilename,
+  });
+
+  let json = '';
+  data.forEach((obj) => {
+    json += `${JSON.stringify(obj)}\n`;
+  });
+  const path = `/tmp/${config.table}.json`;
+  fs.writeFileSync(path, json, 'utf-8');
+
+  return insert(client, config, schema, path).then(() => {
+    fs.unlinkSync(path);
+  }).catch((err) => {
+    throw err;
+  });
+};
