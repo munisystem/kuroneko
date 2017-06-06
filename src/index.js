@@ -1,4 +1,6 @@
 const aws = require('aws-sdk');
+const aws4 = require('aws4');
+const https = require('https');
 const plpr = require('plpr');
 const fs = require('fs');
 const pgn = require('pg-query-normalizer');
@@ -9,6 +11,7 @@ const bq = require('./bq');
 const rds = new aws.RDS();
 
 const DBInstanceIdentifier = process.env.AWS_DB_INSTANCE_IDENTIFIER;
+const region = process.env.AWS_REGION;
 const logLinePrefix = process.env.PSQL_LOG_LINE_PREFIX;
 const backend = process.env.BACKEND_SERVICE;
 
@@ -18,36 +21,33 @@ async function downloadLogFile() {
   };
   if (typeof DBInstanceIdentifier === 'undefined') throw new Error('You have to export AWS RDS DB instance name to "AWS_DB_INSTANCE_IDENTIFIER"');
 
-  try {
-    const describeDBLogFilesPromise = rds.describeDBLogFiles(params).promise();
-    const data = await describeDBLogFilesPromise;
-    let obj = JSON.parse(JSON.stringify(data)).DescribeDBLogFiles;
-    const files = obj.map(value => value.LogFileName);
+  const describeDBLogFilesPromise = rds.describeDBLogFiles(params).promise();
+  const data = await describeDBLogFilesPromise;
+  const obj = JSON.parse(JSON.stringify(data)).DescribeDBLogFiles;
+  const files = obj.map(value => value.LogFileName);
 
-    const filename = process.env.AWS_DB_LOGFILE_NAME;
-    params.LogFileName = filename;
-    if (typeof filename === 'undefined') {
-      params.LogFileName = files[files.length - 2];
-    }
-    console.log(`Downloading: ${params.LogFileName}...`); // eslint-disable-line no-console
-
-    let next = true;
-    let marker = '0';
-    let raw = '';
-    while (next) {
-      params.Marker = marker;
-      const downloadLogFilePortionPromise = rds.downloadDBLogFilePortion(params).promise();
-      const resp = await downloadLogFilePortionPromise; // eslint-disable-line no-await-in-loop
-
-      obj = JSON.parse(JSON.stringify(resp));
-      next = obj.AdditionalDataPending;
-      marker = obj.Marker;
-      raw += obj.LogFileData;
-    }
-    return raw;
-  } catch (error) {
-    throw error;
+  const filename = process.env.AWS_DB_LOGFILE_NAME;
+  params.LogFileName = filename;
+  if (typeof filename === 'undefined') {
+    params.LogFileName = files[files.length - 2];
   }
+  console.log(`Downloading: ${params.LogFileName}...`); // eslint-disable-line no-console
+
+  if (typeof region === 'undefined') throw new Error('You have to export AWS region to "AWS_REGION"');
+  const path = `/v13/downloadCompleteLogFile/${DBInstanceIdentifier}/${params.LogFileName}`;
+
+  const opt = aws4.sign({ service: 'rds', path, region });
+  return new Promise((resolve, reject) => {
+    const req = https.request(opt, (res) => {
+      let body = '';
+      res.on('data', (chunk) => {
+        body += chunk;
+      });
+      res.on('end', () => resolve(body));
+    });
+    req.end();
+    req.on('err', err => reject(err));
+  });
 }
 
 function dataReceiver() {
@@ -55,8 +55,7 @@ function dataReceiver() {
   if (typeof filepath === 'undefined') {
     return downloadLogFile();
   }
-  const data = fs.readFileSync(filepath, 'utf-8');
-  return Promise.resolve(data);
+  return Promise.resolve(fs.readFileSync(filepath, 'utf-8'));
 }
 
 function normalizeQueries(logs) {
