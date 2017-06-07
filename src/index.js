@@ -11,7 +11,6 @@ const bq = require('./bq');
 const rds = new aws.RDS();
 
 const DBInstanceIdentifier = process.env.AWS_DB_INSTANCE_IDENTIFIER;
-const region = process.env.AWS_REGION;
 const logLinePrefix = process.env.PSQL_LOG_LINE_PREFIX;
 const backend = process.env.BACKEND_SERVICE;
 
@@ -33,7 +32,9 @@ async function downloadLogFile() {
   }
   console.log(`Downloading: ${params.LogFileName}...`); // eslint-disable-line no-console
 
-  if (typeof region === 'undefined') throw new Error('You have to export AWS region to "AWS_REGION"');
+  const region = rds.config.region;
+  process.env.AWS_ACCESS_KEY_ID = rds.config.credentials.accessKeyId;
+  process.env.AWS_SECRET_ACCESS_KEY = rds.config.credentials.secretAccessKey;
   const path = `/v13/downloadCompleteLogFile/${DBInstanceIdentifier}/${params.LogFileName}`;
 
   const opt = aws4.sign({ service: 'rds', path, region });
