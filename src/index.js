@@ -8,13 +8,14 @@ const pgn = require('pg-query-normalizer');
 const es = require('./elasticsearch');
 const bq = require('./bq');
 
-const rds = new aws.RDS();
-
 const DBInstanceIdentifier = process.env.AWS_DB_INSTANCE_IDENTIFIER;
 const logLinePrefix = process.env.PSQL_LOG_LINE_PREFIX;
 const backend = process.env.BACKEND_SERVICE;
 
+
 async function downloadLogFile() {
+  const rds = new aws.RDS();
+
   const params = {
     DBInstanceIdentifier,
   };
@@ -48,6 +49,7 @@ async function downloadLogFile() {
         if (res.statusCode !== 200) {
           return reject(new Error(body));
         }
+        return resolve(body);
       });
     });
     req.end();
@@ -79,7 +81,7 @@ exports.handler = (event, context, callback) => {
 
     const logs = plpr(data, logLinePrefix);
     if (logs.length === 0) {
-      return callback(null, 'success');
+      return callback(null, 'nothing logs');
     }
     console.log(`Insert data length: ${logs.length}`); // eslint-disable-line no-console
 
