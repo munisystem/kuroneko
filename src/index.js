@@ -39,12 +39,16 @@ async function downloadLogFile() {
 
   const opt = aws4.sign({ service: 'rds', path, region });
   return new Promise((resolve, reject) => {
-    const req = https.request(opt, (res) => {
+    const req = https.request(opt, (res) => { // eslint-disable-line
       let body = '';
       res.on('data', (chunk) => {
         body += chunk;
       });
-      res.on('end', () => resolve(body));
+      res.on('end', () => { // eslint-disable-line
+        if (res.statusCode !== 200) {
+          return reject(new Error(body));
+        }
+      });
     });
     req.end();
     req.on('err', err => reject(err));
