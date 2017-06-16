@@ -34,11 +34,12 @@ async function downloadLogFile() {
   console.log(`Downloading: ${params.LogFileName}...`); // eslint-disable-line no-console
 
   const region = rds.config.region;
-  process.env.AWS_ACCESS_KEY_ID = rds.config.credentials.accessKeyId;
-  process.env.AWS_SECRET_ACCESS_KEY = rds.config.credentials.secretAccessKey;
+  const accessKeyId = rds.config.credentials.accessKeyId;
+  const secretAccessKey = rds.config.credentials.secretAccessKey;
+  const sessionToken = rds.config.credentials.sessionToken;
   const path = `/v13/downloadCompleteLogFile/${DBInstanceIdentifier}/${params.LogFileName}`;
 
-  const opt = aws4.sign({ service: 'rds', path, region });
+  const opt = aws4.sign({ service: 'rds', path, region }, { accessKeyId, secretAccessKey, sessionToken });
   return new Promise((resolve, reject) => {
     const req = https.request(opt, (res) => { // eslint-disable-line
       let body = '';
